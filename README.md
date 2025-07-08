@@ -1,5 +1,16 @@
 # react-datasheet-grid
 
+## Changes from main repo
+
+1. Applied [#368](https://github.com/nick-keller/react-datasheet-grid/pull/368) to prefer text/plain when pasting.
+
+## Versioning in this fork
+
+We'll follow the same version number as the main number with `inclus.x` added for each change we make.
+
+---
+
+
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nick-keller/react-datasheet-grid/tests.yml?branch=master)
 [![Coveralls](https://img.shields.io/coveralls/github/nick-keller/react-datasheet-grid)](https://coveralls.io/github/nick-keller/react-datasheet-grid)
 [![npm](https://img.shields.io/npm/dm/react-datasheet-grid)](https://www.npmjs.com/package/react-datasheet-grid)
