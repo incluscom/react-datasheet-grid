@@ -1,5 +1,5 @@
 {
-  "name": "react-datasheet-grid",
+  "name": "@inclus/react-datasheet-grid",
   "version": "4.11.5",
   "description": "An Excel-like React component to create beautiful spreadsheets.",
   "main": "dist/index.js",
@@ -24,7 +24,7 @@
   ],
   "author": "Nicolas Keller (https://github.com/nick-keller)",
   "license": "MIT",
-  "repository": "nick-keller/react-datasheet-grid",
+  "repository": "incluscom/react-datasheet-grid",
   "homepage": "https://react-datasheet-grid.netlify.app/",
   "devDependencies": {
     "@jest/types": "^27.4.2",
