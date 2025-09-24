@@ -1,3 +1,5 @@
+import SheetClip from 'sheetclip';
+
 import { parseDom } from './domParser'
 
 export const parseTextHtmlData = (data: string): string[][] => {
@@ -29,6 +31,9 @@ export const parseTextHtmlData = (data: string): string[][] => {
 }
 
 export const parseTextPlainData = (data: string): string[][] => {
+  const sheetclip = new SheetClip();
+  return sheetclip.parse(data) as string[][];
+  /*
   const cleanData = data.replace(/\r|\n$/g, '')
   const output: string[][] = [[]]
   let cursor = 0
@@ -97,6 +102,7 @@ export const parseTextPlainData = (data: string): string[][] => {
   saveCell()
 
   return output
+  */
 }
 
 export const encodeHtml = (str: string) => {

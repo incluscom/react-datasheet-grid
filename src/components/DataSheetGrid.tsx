@@ -1,3 +1,4 @@
+import SheetClip from 'sheetclip';
 import React, {
   useCallback,
   useEffect,
@@ -27,9 +28,9 @@ import { useDebounceState } from '../hooks/useDebounceState'
 import deepEqual from 'fast-deep-equal'
 import { ContextMenu } from './ContextMenu'
 import {
-  encodeHtml,
+  // encodeHtml,
   isPrintableUnicode,
-  parseTextHtmlData,
+  // parseTextHtmlData,
   parseTextPlainData,
 } from '../utils/copyPasting'
 import {
@@ -624,6 +625,18 @@ export const DataSheetGrid = React.memo(
               }
             }
 
+            // We use sheetclip for copying data to clipboard,
+            // and skip al the fancy HTML clipboard stuff.
+            // This makes copy/paste work significantly more robust.
+            const sheetclip = new SheetClip();
+            const output = sheetclip.stringify(copyData);
+            if (navigator?.clipboard?.writeText) {
+              await navigator.clipboard.writeText(output);
+              return;
+            }
+            const success = false; // To keep minimal changes in the code below
+
+            /*
             const textPlain = copyData.map((row) => row.join('\t')).join('\n')
             const textHtml = `<table>${copyData
               .map(
@@ -672,6 +685,7 @@ export const DataSheetGrid = React.memo(
                 success = true
               }
             }
+            */
             if (!success) {
               alert(
                 'This action is unavailable in your browser, but you can still use Ctrl+C for copy or Ctrl+X for cut'
@@ -867,10 +881,13 @@ export const DataSheetGrid = React.memo(
               pasteData = parseTextPlainData(
                 event.clipboardData?.getData('text/plain')
               )
+            /*
+            // We disable HTML pasting, as it is too unreliable
             } else if (event.clipboardData?.types.includes('text/html')) {
               pasteData = parseTextHtmlData(
                 event.clipboardData?.getData('text/html')
               )
+            */
             } else if (event.clipboardData?.types.includes('text')) {
               pasteData = parseTextPlainData(
                 event.clipboardData?.getData('text')
@@ -1560,6 +1577,11 @@ export const DataSheetGrid = React.memo(
             {
               type: 'PASTE',
               action: async (): Promise<void> => {
+                /*
+                // We ignore the full navigator.clipboard.read API,
+                // as we have no need for HTML clipboard support,
+                // and the new API makes paste handling significantly more complex
+                // and unreliable.
                 if (navigator.clipboard.read !== undefined) {
                   const items = await navigator.clipboard.read()
                   items.forEach(async (item) => {
@@ -1576,7 +1598,8 @@ export const DataSheetGrid = React.memo(
                     }
                     applyPasteDataToDatasheet(pasteData)
                   })
-                } else if (navigator.clipboard.readText !== undefined) {
+                } else */
+                if (navigator.clipboard.readText !== undefined) {
                   const text = await navigator.clipboard.readText()
                   applyPasteDataToDatasheet(parseTextPlainData(text))
                 } else {
