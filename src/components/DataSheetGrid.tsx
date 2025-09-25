@@ -626,6 +626,8 @@ export const DataSheetGrid = React.memo(
               }
             }
 
+            // If a copyHandler is set, we use it and bypass the rest of the logic.
+            // The copyHandler should take care of writing the data to the clipboard.
             if (copyHandler) {
               copyHandler(copyData)
               return
@@ -870,6 +872,8 @@ export const DataSheetGrid = React.memo(
         (event: ClipboardEvent) => {
           if (activeCell && !editing) {
             let pasteData = [['']]
+            // If pasteHandler is set, we'll only read raw text data
+            // and completely bypass the built-in parsing logic
             if (pasteHandler) {
               let pasteString = '';
               if (event.clipboardData?.types.includes('text/plain')) {
@@ -1575,6 +1579,8 @@ export const DataSheetGrid = React.memo(
             {
               type: 'PASTE',
               action: async (): Promise<void> => {
+                // If pasteHandler is set, we'll only read raw text data
+                // and completely bypass the built-in parsing logic
                 if (pasteHandler) {
                   // PasteHandler always uses the readText method
                   if (navigator.clipboard.readText !== undefined) {
