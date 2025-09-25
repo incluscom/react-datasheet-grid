@@ -2,11 +2,50 @@
 
 ## Changes from main repo
 
-1. Applied [#368](https://github.com/nick-keller/react-datasheet-grid/pull/368) to prefer text/plain when pasting.
+### 1. Custom copy/paste handler support
+
+The `<DataSheetGrid>` component now accepts optional `pasteHandler` and `copyHandler` props. These allow you to define custom logic for handling paste and copy events, respectively. If these props are not provided, the component will fall back to its default behavior. Both handlers should be memoized using e.g. `useCallback`.
+- `pasteHandler`: A memoized function that takes a string (the pasted content) and returns a 2D array of strings representing the data to be pasted into the grid.
+- `copyHandler`: A memoized function that takes a 2D array of strings (the data to be copied) writes it to the clipboard.
+
+The handlers only deal with raw text data, and ignore any HTML versions in the clipboard. Setting the handlers will disable HTML support for copy/paste.
+
+With the custom handlers, you can use, e.g., the reliable SheetClip library to handle clipboard operations. Example code:
+
+```jsx
+const handlePaste = useCallback((text) => {
+  const sheetclip = new SheetClip();
+  return sheetclip.parse(text);
+}, []);
+
+const handleCopy = useCallback((cellData) => {
+  const sheetclip = new SheetClip();
+  const output = sheetclip.stringify(cellData);
+  if (navigator?.clipboard?.writeText) {
+    navigator.clipboard.writeText(output);
+  }
+}, []);
+
+return (
+  <DataSheetGrid
+    pasteHandler={handlePaste}
+    copyHandler={handleCopy}
+  />
+);
+```
 
 ## Versioning in this fork
 
 We'll follow the same version number as the main number with `inclus.x` added for each change we make.
+
+## Making a new release
+
+We follow this process to make a new release:
+1. Create a patch, and increase the version number in `package.json`. Make a PR to the `master` branch.
+2. Merge the PR, and fork a new `release/<version>` branch from `master`.
+3. In the `release/<version>` branch, run `npm run build` to create the production build.
+4. Commit the `dist` folder to the `release/<version>` branch.
+5. Push the `release/<version>` branch to GitHub, and make a release from it.
 
 ---
 

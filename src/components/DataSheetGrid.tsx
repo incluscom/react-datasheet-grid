@@ -88,6 +88,8 @@ export const DataSheetGrid = React.memo(
         rowClassName,
         cellClassName,
         onScroll,
+        pasteHandler,
+        copyHandler,
       }: DataSheetGridProps<T>,
       ref: React.ForwardedRef<DataSheetGridRef>
     ): JSX.Element => {
@@ -624,6 +626,13 @@ export const DataSheetGrid = React.memo(
               }
             }
 
+            // If a copyHandler is set, we use it and bypass the rest of the logic.
+            // The copyHandler should take care of writing the data to the clipboard.
+            if (copyHandler) {
+              copyHandler(copyData)
+              return
+            }
+
             const textPlain = copyData.map((row) => row.join('\t')).join('\n')
             const textHtml = `<table>${copyData
               .map(
@@ -679,7 +688,7 @@ export const DataSheetGrid = React.memo(
             }
           }
         },
-        [activeCell, columns, data, editing, selection]
+        [activeCell, columns, data, editing, selection, copyHandler]
       )
       useDocumentEventListener('copy', onCopy)
 
@@ -863,13 +872,23 @@ export const DataSheetGrid = React.memo(
         (event: ClipboardEvent) => {
           if (activeCell && !editing) {
             let pasteData = [['']]
-            if (event.clipboardData?.types.includes('text/plain')) {
-              pasteData = parseTextPlainData(
-                event.clipboardData?.getData('text/plain')
-              )
+            // If pasteHandler is set, we'll only read raw text data
+            // and completely bypass the built-in parsing logic
+            if (pasteHandler) {
+              let pasteString = '';
+              if (event.clipboardData?.types.includes('text/plain')) {
+                pasteString = event.clipboardData?.getData('text/plain')
+              } else if (event.clipboardData?.types.includes('text')) {
+                pasteString = event.clipboardData?.getData('text')
+              }
+              pasteData = pasteHandler(pasteString)
             } else if (event.clipboardData?.types.includes('text/html')) {
               pasteData = parseTextHtmlData(
                 event.clipboardData?.getData('text/html')
+              )
+            } else if (event.clipboardData?.types.includes('text/plain')) {
+              pasteData = parseTextPlainData(
+                event.clipboardData?.getData('text/plain')
               )
             } else if (event.clipboardData?.types.includes('text')) {
               pasteData = parseTextPlainData(
@@ -880,7 +899,7 @@ export const DataSheetGrid = React.memo(
             event.preventDefault()
           }
         },
-        [activeCell, applyPasteDataToDatasheet, editing]
+        [activeCell, applyPasteDataToDatasheet, editing, pasteHandler]
       )
 
       useDocumentEventListener('paste', onPaste)
@@ -1560,16 +1579,24 @@ export const DataSheetGrid = React.memo(
             {
               type: 'PASTE',
               action: async (): Promise<void> => {
-                if (navigator.clipboard.read !== undefined) {
+                // If pasteHandler is set, we'll only read raw text data
+                // and completely bypass the built-in parsing logic
+                if (pasteHandler) {
+                  // PasteHandler always uses the readText method
+                  if (navigator.clipboard.readText !== undefined) {
+                    const text = await navigator.clipboard.readText()
+                    pasteHandler(text)
+                  }
+                } else if (navigator.clipboard.read !== undefined) {
                   const items = await navigator.clipboard.read()
                   items.forEach(async (item) => {
                     let pasteData = [['']]
-                    if (item.types.includes('text/plain')) {
-                      const plainTextData = await item.getType('text/plain')
-                      pasteData = parseTextPlainData(await plainTextData.text())
-                    } else if (item.types.includes('text/html')) {
+                    if (item.types.includes('text/html')) {
                       const htmlTextData = await item.getType('text/html')
                       pasteData = parseTextHtmlData(await htmlTextData.text())
+                    } else if (item.types.includes('text/plain')) {
+                      const plainTextData = await item.getType('text/plain')
+                      pasteData = parseTextPlainData(await plainTextData.text())
                     } else if (item.types.includes('text')) {
                       const htmlTextData = await item.getType('text')
                       pasteData = parseTextHtmlData(await htmlTextData.text())
@@ -1667,6 +1694,7 @@ export const DataSheetGrid = React.memo(
         onCut,
         onCopy,
         applyPasteDataToDatasheet,
+        pasteHandler,
       ])
 
       const contextMenuItemsRef = useRef(contextMenuItems)
